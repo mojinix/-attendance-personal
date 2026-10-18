@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>حضور و غیاب شخصی</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e4e7ec;--primary:#3559e0;--green:#12805c;--red:#c0394b;--orange:#b66a08}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.7}
+header{background:linear-gradient(120deg,#243fbd,#5576f2);color:white;padding:24px 16px 34px}
+.wrap{max-width:1000px;margin:auto;padding:0 14px}h1{font-size:24px;margin:0 0 5px}header p{margin:0;color:#e9edff}
+main{margin-top:-18px;padding-bottom:36px}.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:0 5px 20px #16244a08}.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}.span-4{grid-column:span 4}
+h2{font-size:17px;margin:0 0 12px}.muted{color:var(--muted);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:#f8f9ff;border:1px solid #e9ecff;border-radius:12px;padding:12px}.stat small{color:var(--muted);display:block}.stat strong{font-size:23px}
+label{display:block;font-size:13px;color:#475467;margin:0 0 5px}input,select,textarea{width:100%;border:1px solid #d0d5dd;border-radius:10px;padding:11px 10px;background:#fff;color:var(--text);font:inherit;font-size:14px;min-width:0}input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--primary)}
+.formrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{margin-bottom:12px}
+button{border:0;border-radius:10px;padding:10px 14px;font:inherit;font-size:14px;cursor:pointer;background:var(--primary);color:white}button:hover{filter:brightness(.96)}button.secondary{background:#eef2ff;color:#263eae}button.light{background:#f2f4f7;color:#344054}button.danger{background:#fff0f1;color:#b42335}button.success{background:#e9f8f1;color:#08764f}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:bold}.present{background:#e6f7ef;color:#08764f}.absent{background:#fff0f1;color:#b42335}.late{background:#fff4df;color:#9a5b00}.leave{background:#edf2ff;color:#334bb5}.none{background:#f2f4f7;color:#475467}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:right;padding:11px 8px;border-bottom:1px solid var(--line);vertical-align:middle}th{color:#667085;background:#fafbff;font-weight:bold}td .actions{margin:0}td button{padding:6px 9px;font-size:12px}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+.empty{text-align:center;padding:24px;color:var(--muted)}
+.toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.toolbar .field{margin:0;flex:1;min-width:140px}
+.note{background:#fff9e8;border:1px solid #f4e2ae;color:#76520a;padding:11px 12px;border-radius:10px;font-size:13px;margin-top:12px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:0 10px 24px}
+@media(max-width:700px){.span-8,.span-6,.span-4{grid-column:span 12}.stats{grid-template-columns:repeat(2,1fr)}.formrow{grid-template-columns:1fr}h1{font-size:21px}.card{padding:14px}header{padding-top:20px}}
+@media print{body{background:#fff}.no-print,header p,.actions,button{display:none!important}.card{box-shadow:none;break-inside:avoid}.span-12,.span-8,.span-6,.span-4{grid-column:span 12}header{background:#fff;color:#111;padding:0}.wrap{max-width:none}main{margin:0}.tablewrap{overflow:visible}th,td{font-size:11px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>دفتر حضور و غیاب شخصی</h1><p>ثبت روزانه، پیگیری تأخیرها و گزارش ماهانه — ساده و آفلاین</p></div></header>
+<main class="wrap">
+<div class="grid">
+<section class="card span-12">
+<h2>خلاصه وضعیت</h2>
+<div class="stats">
+<div class="stat"><small>ثبت‌های این ماه</small><strong id="statTotal">۰</strong></div>
+<div class="stat"><small>حضور</small><strong id="statPresent">۰</strong></div>
+<div class="stat"><small>غیبت</small><strong id="statAbsent">۰</strong></div>
+<div class="stat"><small>تأخیر</small><strong id="statLate">۰</strong></div>
+</div>
+</section>
+
+<section class="card span-6">
+<h2 id="formTitle">ثبت حضور و غیاب</h2>
+<form id="entryForm">
+<input type="hidden" id="editId">
+<div class="formrow">
+<div class="field"><label for="entryDate">تاریخ</label><input id="entryDate" type="date" required></div>
+<div class="field"><label for="status">وضعیت</label><select id="status"><option value="present">حاضر</option><option value="late">با تأخیر</option><option value="absent">غایب</option><option value="leave">مرخصی</option></select></div>
+</div>
+<div class="formrow">
+<div class="field"><label for="timeIn">ساعت ورود</label><input id="timeIn" type="time"></div>
+<div class="field"><label for="timeOut">ساعت خروج</label><input id="timeOut" type="time"></div>
+</div>
+<div class="field"><label for="note">یادداشت (اختیاری)</label><input id="note" type="text" maxlength="180" placeholder="مثلاً جلسه، کار شخصی، علت غیبت..."></div>
+<div class="actions"><button type="submit" id="saveBtn">ذخیره ثبت</button><button type="button" class="light" id="cancelEdit" hidden>لغو ویرایش</button><button type="button" class="secondary" id="todayBtn">انتخاب امروز</button></div>
+</form>
+<div class="card" style="margin-top:14px;background:#f8f9ff;box-shadow:none">
+<h2>ثبت خودکار ورود و خروج</h2>
+<div class="stats" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:10px">
+<div class="stat"><small>شروع کار امروز</small><strong id="liveIn" style="font-size:18px">—</strong></div>
+<div class="stat"><small>مدت کار جاری</small><strong id="liveDuration" style="font-size:18px">۰۰:۰۰</strong></div>
+</div>
+<div class="actions">
+<button type="button" class="success" id="clockInBtn">ثبت ورود به کار</button>
+<button type="button" id="clockOutBtn" class="secondary">پایان کار و ثبت خروج</button>
+</div>
+<p class="muted" style="margin-bottom:0">با ثبت ورود، ساعت شروع ذخیره می‌شود؛ با پایان کار، ساعت خروج و مدت کار روزانه محاسبه می‌شود.</p>
+</div>
+<div class="note">اطلاعات در حافظه همین مرورگر ذخیره می‌شود؛ برای نگهداری یا انتقال، هر از گاهی نسخه پشتیبان بگیر.</div>
+</section>
+
+<section class="card span-6">
+<h2>فیلتر و گزارش</h2>
+<div class="toolbar">
+<div class="field"><label for="filterMonth">ماه گزارش</label><input type="month" id="filterMonth"></div>
+<div class="field"><label for="filterStatus">وضعیت</label><select id="filterStatus"><option value="all">همه وضعیت‌ها</option><option value="present">حاضر</option><option value="late">با تأخیر</option><option value="absent">غایب</option><option value="leave">مرخصی</option></select></div>
+</div>
+<div class="actions">
+<button id="exportCsv" type="button" class="secondary">خروجی CSV</button>
+<button id="backupBtn" type="button" class="secondary">پشتیبان JSON</button>
+<button id="restoreBtn" type="button" class="light">بازیابی پشتیبان</button>
+<input type="file" id="restoreFile" accept=".json,application/json" hidden>
+<button id="printBtn" type="button" class="light">چاپ گزارش</button>
+</div>
+<p class="muted">گزارش براساس ماه انتخاب‌شده محاسبه می‌شود. خروجی CSV را می‌توان در Excel باز کرد.</p>
+</section>
+
+<section class="card span-12">
+<div class="toolbar" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+<div><h2 style="margin:0">سوابق حضور و غیاب</h2><div class="muted" id="recordCount">۰ مورد</div></div>
+<div class="field" style="max-width:280px"><label for="search">جست‌وجو در یادداشت‌ها و تاریخ</label><input id="search" type="search" placeholder="جست‌وجو..."></div>
+</div>
+<div class="tablewrap">
+<table><thead><tr><th>تاریخ</th><th>وضعیت</th><th>ورود</th><th>خروج</th><th>مدت کار</th><th>یادداشت</th><th class="no-print">عملیات</th></tr></thead><tbody id="recordsBody"></tbody></table>
+<div id="emptyState" class="empty">هنوز سابقه‌ای ثبت نشده است. از فرم بالا اولین مورد را ثبت کن.</div>
+</div>
+<div class="actions no-print"><button type="button" id="deleteMonth" class="danger">حذف ثبت‌های این ماه</button><button type="button" id="deleteAll" class="danger">حذف همه اطلاعات</button></div>
+</section>
+</div>
+</main>
+<footer>حضور و غیاب شخصی • برای حفظ حریم خصوصی، فایل پشتیبان را در جای امن نگه دار.</footer>
+<script>
+(() => {
+ const KEY = 'personalAttendanceFa_v1';
+ const $ = id => document.getElementById(id);
+ const statusText = {present:'حاضر', late:'با تأخیر', absent:'غایب', leave:'مرخصی'};
+ let records = [];
+ try { records = JSON.parse(localStorage.getItem(KEY) || '[]'); if (!Array.isArray(records)) records=[]; } catch(e) { records=[]; }
+ const pad = n => String(n).padStart(2,'0');
+ const today = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+ const thisMonth = () => today().slice(0,7);
+ const faNum = n => Number(n).toLocaleString('fa-IR');
+ const persist = () => localStorage.setItem(KEY, JSON.stringify(records));
+ const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const dateLabel = s => { if(!s) return '—'; const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; };
+ const durationMinutes = (start,end) => {
+   if(!start||!end) return null;
+   const [sh,sm]=start.split(':').map(Number), [eh,em]=end.split(':').map(Number);
+   let diff=(eh*60+em)-(sh*60+sm); if(diff<0) diff+=24*60;
+   return diff;
+ };
+ const durationLabel = (mins) => mins==null?'—':`${faNum(Math.floor(mins/60))} ساعت و ${faNum(mins%60)} دقیقه`;
+ const updateLive = () => {
+   const r=records.find(x=>x.date===today());
+   $('liveIn').textContent=r?.timeIn||'—';
+   const mins=r?.timeIn ? durationMinutes(r.timeIn,r.timeOut || `${pad(new Date().getHours())}:${pad(new Date().getMinutes())}`) : null;
+   $('liveDuration').textContent=mins==null?'۰۰:۰۰':`${faNum(Math.floor(mins/60))}:${pad(mins%60)}`;
+   $('clockInBtn').disabled=!!(r&&r.timeIn);
+   $('clockOutBtn').disabled=!(r&&r.timeIn&&!r.timeOut);
+ };
+ const filtered = () => {
+   const month=$('filterMonth').value, status=$('filterStatus').value, q=$('search').value.trim().toLowerCase();
+   return records.filter(r=>(!month||r.date.startsWith(month))&&(status==='all'||r.status===status)&&(!q||(r.date+' '+(r.note||'')+' '+statusText[r.status]).toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));
+ };
+ function render(){
+   const month=$('filterMonth').value || thisMonth();
+   const monthRecords=records.filter(r=>r.date.startsWith(month));
+   $('statTotal').textContent=faNum(monthRecords.length);
+   $('statPresent').textContent=faNum(monthRecords.filter(r=>r.status==='present').length);
+   $('statAbsent').textContent=faNum(monthRecords.filter(r=>r.status==='absent').length);
+   $('statLate').textContent=faNum(monthRecords.filter(r=>r.status==='late').length);
+   const list=filtered();
+   $('recordCount').textContent=faNum(list.length)+' مورد';
+   $('recordsBody').innerHTML=list.map(r=>`<tr>
+    <td>${escapeHtml(dateLabel(r.date))}</td>
+    <td><span class="pill ${escapeHtml(r.status)}">${escapeHtml(statusText[r.status]||r.status)}</span></td>
+    <td>${escapeHtml(r.timeIn||'—')}</td><td>${escapeHtml(r.timeOut||'—')}</td><td>${escapeHtml(durationLabel(durationMinutes(r.timeIn,r.timeOut)))}</td><td>${escapeHtml(r.note||'—')}</td>
+    <td class="no-print"><div class="actions"><button type="button" class="secondary" data-edit="${escapeHtml(r.id)}">ویرایش</button><button type="button" class="danger" data-delete="${escapeHtml(r.id)}">حذف</button></div></td>
+   </tr>`).join('');
+   $('emptyState').style.display=list.length?'none':'block';
+   updateLive();
+ }
+ function resetForm(){ $('entryForm').reset(); $('editId').value=''; $('entryDate').value=today(); $('formTitle').textContent='ثبت حضور و غیاب'; $('saveBtn').textContent='ذخیره ثبت'; $('cancelEdit').hidden=true; }
+ $('entryForm').addEventListener('submit', e=>{
+   e.preventDefault();
+   const id=$('editId').value || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random());
+   const item={id,date:$('entryDate').value,status:$('status').value,timeIn:$('timeIn').value,timeOut:$('timeOut').value,note:$('note').value.trim()};
+   if(!item.date){alert('لطفاً تاریخ را انتخاب کن.');return;}
+   const idx=records.findIndex(r=>r.id===id);
+   if(idx>=0) records[idx]=item; else {
+     const same=records.findIndex(r=>r.date===item.date);
+     if(same>=0 && !confirm('برای این تاریخ قبلاً ثبت وجود دارد. مورد قبلی جایگزین شود؟')) return;
+     if(same>=0) records[same]=item; else records.push(item);
+   }
+   persist(); $('filterMonth').value=item.date.slice(0,7); resetForm(); render();
+ });
+ $('recordsBody').addEventListener('click', e=>{
+   const edit=e.target.closest('[data-edit]'), del=e.target.closest('[data-delete]');
+   if(edit){const r=records.find(x=>x.id===edit.dataset.edit);if(!r)return;
+    $('editId').value=r.id;$('entryDate').value=r.date;$('status').value=r.status;$('timeIn').value=r.timeIn||'';$('timeOut').value=r.timeOut||'';$('note').value=r.note||'';
+    $('formTitle').textContent='ویرایش ثبت';$('saveBtn').textContent='ذخیره تغییرات';$('cancelEdit').hidden=false;window.scrollTo({top:0,behavior:'smooth'});
+   }
+   if(del && confirm('این ثبت حذف شود؟')){records=records.filter(x=>x.id!==del.dataset.delete);persist();render();}
+ });
+ $('cancelEdit').addEventListener('click',resetForm);
+ $('todayBtn').addEventListener('click',()=>{$('entryDate').value=today();});
+ ['filterMonth','filterStatus','search'].forEach(id=>$(id).addEventListener('input',render));
+ $('backupBtn').addEventListener('click',()=>{
+   const blob=new Blob([JSON.stringify({app:'personal-attendance-fa',version:1,exportedAt:new Date().toISOString(),records},null,2)],{type:'application/json;charset=utf-8'});
+   download(blob,`attendance-backup-${today()}.json`);
+ });
+ $('restoreBtn').addEventListener('click',()=>$('restoreFile').click());
+ $('restoreFile').addEventListener('change',async e=>{
+   const file=e.target.files[0];if(!file)return;
+   try{const data=JSON.parse(await file.text());const incoming=Array.isArray(data)?data:data.records;
+    if(!Array.isArray(incoming)||!incoming.every(r=>r&&r.date&&r.status&&statusText[r.status]))throw Error('invalid');
+    if(confirm(`تعداد ${incoming.length} ثبت از فایل بازیابی شود؟ اطلاعات فعلی جایگزین خواهد شد.`)){records=incoming;persist();render();resetForm();alert('بازیابی انجام شد.');}
+   }catch(err){alert('فایل پشتیبان معتبر نیست.');}finally{e.target.value='';}
+ });
+ $('exportCsv').addEventListener('click',()=>{
+   const rows=[['تاریخ','وضعیت','ساعت ورود','ساعت خروج','مدت کار (دقیقه)','یادداشت'],...filtered().map(r=>[r.date,statusText[r.status]||r.status,r.timeIn||'',r.timeOut||'',durationMinutes(r.timeIn,r.timeOut) ?? '',r.note||''])];
+   const csv='\uFEFF'+rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+   download(new Blob([csv],{type:'text/csv;charset=utf-8'}),`attendance-${$('filterMonth').value||thisMonth()}.csv`);
+ });
+ function download(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ $('clockInBtn').addEventListener('click',()=>{
+   const date=today(), time=`${pad(new Date().getHours())}:${pad(new Date().getMinutes())}`;
+   let r=records.find(x=>x.date===date);
+   if(r&&r.timeIn){alert('برای امروز ساعت ورود ثبت شده است.');return;}
+   if(r){r.timeIn=time;if(!r.status||r.status==='absent')r.status='present';}
+   else {r={id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),date,status:'present',timeIn:time,timeOut:'',note:''};records.push(r);}
+   persist();$('filterMonth').value=date.slice(0,7);render();updateLive();
+ });
+ $('clockOutBtn').addEventListener('click',()=>{
+   const date=today(), r=records.find(x=>x.date===date);
+   if(!r||!r.timeIn){alert('ابتدا ورود به کار را ثبت کن.');return;}
+   if(r.timeOut&&!confirm('ساعت خروج قبلاً ثبت شده است. جایگزین شود؟'))return;
+   r.timeOut=`${pad(new Date().getHours())}:${pad(new Date().getMinutes())}`;
+   persist();render();updateLive();
+ });
+ $('printBtn').addEventListener('click',()=>window.print());
+ $('deleteMonth').addEventListener('click',()=>{const m=$('filterMonth').value||thisMonth();const count=records.filter(r=>r.date.startsWith(m)).length;if(count&&confirm(`تمام ${count} ثبت ماه ${m} حذف شود؟`)){records=records.filter(r=>!r.date.startsWith(m));persist();render();}});
+ $('deleteAll').addEventListener('click',()=>{if(records.length&&confirm('همه اطلاعات حضور و غیاب برای همیشه از این مرورگر حذف شود؟')){records=[];persist();render();resetForm();}});
+ $('filterMonth').value=thisMonth(); resetForm(); render();
+})();
+</script>
+</body>
+</html>
